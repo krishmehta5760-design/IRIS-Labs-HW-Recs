@@ -40,12 +40,15 @@ module rvsoc_wrapper (
 
 	reg [31:0] gpio;
 
+	wire dataproc_sel = (iomem_addr[31:16] == 16'h0300);
+	wire gpio_sel = (iomem_addr[31:24] == 8'h04);
+
 	always @(posedge clk) begin
 		if (!resetn) begin
 			gpio <= 0;
 		end else begin
 			iomem_ready <= 0;
-			if (iomem_valid && !iomem_ready && iomem_addr[31:24] == 8'h 03) begin
+			if (iomem_valid && !iomem_ready && gpio_sel) begin
 				iomem_ready <= 1;
 				iomem_rdata <= gpio;
 				if (iomem_wstrb[0]) gpio[ 7: 0] <= iomem_wdata[ 7: 0];
