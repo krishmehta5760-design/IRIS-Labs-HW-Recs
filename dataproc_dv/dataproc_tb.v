@@ -25,14 +25,22 @@ module dataproc_tb;
 	wire flash_io3;
 
 	/* Write your tb logic for your dataprocessing module here */
-
-
-
-
-
-
-
-
+	initial begin
+		$dumpfile("dataproc_tb.vcd");
+		$dumpvars(0, dataproc_tb);
+		
+		$dumpvars(1, uut.soc.cpu);
+		$dumpvars(1, uut.soc.data_proc_accel);
+		
+		$display("  Data Processor Integration Test");
+		
+		repeat (20) begin
+			repeat (100000) @(posedge clk);
+			$display("Time: %0t ns", $time);
+		end
+		
+		$finish;
+	end
 	/*----------------------------------------------------------*/
 
 
@@ -60,28 +68,45 @@ module dataproc_tb;
 		.io3(flash_io3)
 	);
 
-	reg [7:0] buffer;
-
+reg [7:0] buffer;
+	integer char_count = 0;
 	always begin
-		@(negedge ser_tx);
-
+		@(negedge ser_tx);  
 		repeat (ser_half_period) @(posedge clk);
-		-> ser_sample;
-
 		repeat (8) begin
 			repeat (ser_half_period) @(posedge clk);
 			repeat (ser_half_period) @(posedge clk);
 			buffer = {ser_tx, buffer[7:1]};
-			-> ser_sample;
 		end
-
 		repeat (ser_half_period) @(posedge clk);
 		repeat (ser_half_period) @(posedge clk);
-		-> ser_sample;
-
-		if (buffer < 32 || buffer >= 127)
-			$display("Serial data: %d", buffer);
-		else
-			$display("Serial data: '%c'", buffer);
+		$write("%c", buffer);
+		$fflush();
+		char_count = char_count + 1;
+		if (buffer == "!") begin
+			$display("\nDetected completion marker at char %0d", char_count);
+		end
 	end
+
+	initial begin
+		#200000000;  
+		$display("\n ERROR: Simulation timeout!");
+		$finish;
+	end
+
+always @(posedge clk) begin
+	if (uut.soc.data_proc_accel.mem_valid && uut.soc.data_proc_accel.mem_ready) begin
+		if (|uut.soc.data_proc_accel.mem_wstrb) begin
+			$display("[%0t] Data Proc Write: addr=0x%08x data=0x%08x", 
+				$time, 
+				uut.soc.data_proc_accel.mem_addr,
+				uut.soc.data_proc_accel.mem_wdata);
+		end else begin
+			$display("[%0t] Data Proc Read:  addr=0x%08x data=0x%08x", 
+				$time,
+				uut.soc.data_proc_accel.mem_addr,
+				uut.soc.data_proc_accel.mem_rdata);
+		end
+	end
+end
 endmodule
