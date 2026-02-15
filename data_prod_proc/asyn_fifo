@@ -1,0 +1,148 @@
+`timescale 1ns/1ps
+
+module async_fifo (wr_clk,wr_rst_n,wr_data,wr_valid,wr_ready,rd_clk,rd_rst_n,rd_data,rd_valid,rd_ready);
+
+input wr_clk;
+input wr_rst_n;
+input [7:0] wr_data;
+input wr_valid;
+output wr_ready;
+
+input rd_clk;
+input rd_rst_n;
+output reg [7:0] rd_data;
+output rd_valid;
+input  rd_ready;
+
+reg [7:0] mem [0:15];
+
+reg [4:0] wr_ptr_bin;
+reg [4:0] wr_ptr_gray;
+reg [4:0] rd_ptr_gray_sync1;
+reg [4:0] rd_ptr_gray_sync2;
+
+reg [4:0] rd_ptr_bin;
+reg [4:0] rd_ptr_gray;
+reg [4:0] wr_ptr_gray_sync1;
+reg [4:0] wr_ptr_gray_sync2;
+
+reg full;
+reg empty;
+
+wire wr_en;
+wire rd_en;
+
+function [4:0] bin_to_gray;
+input [4:0] bin;
+
+begin
+
+bin_to_gray = bin ^ (bin >> 1);
+    
+end
+    
+endfunction
+
+assign wr_ready = ~full;
+assign wr_en = wr_valid & wr_ready;
+
+always @(posedge wr_clk) begin
+
+if (wr_en) mem[wr_ptr_bin[3:0]] <= wr_data;
+
+end
+
+always @(posedge wr_clk or negedge wr_rst_n) begin
+
+if (!wr_rst_n) wr_ptr_bin <= 5'd0;
+    
+else if (wr_en) wr_ptr_bin <= wr_ptr_bin + 5'd1;
+
+end
+
+always @(posedge wr_clk or negedge wr_rst_n) begin
+
+if (!wr_rst_n) wr_ptr_gray <= 5'd0;
+    
+else wr_ptr_gray <= bin_to_gray(wr_ptr_bin);
+    
+end
+
+always @(posedge wr_clk or negedge wr_rst_n) begin
+
+if (!wr_rst_n) begin
+
+rd_ptr_gray_sync1 <= 5'd0;
+rd_ptr_gray_sync2 <= 5'd0;
+    
+end 
+
+else begin
+
+rd_ptr_gray_sync1 <= rd_ptr_gray;
+rd_ptr_gray_sync2 <= rd_ptr_gray_sync1;
+    
+end
+
+end
+
+always @(posedge wr_clk or negedge wr_rst_n) begin
+
+if (!wr_rst_n) full <= 1'b0;
+
+else full <= (wr_ptr_gray == {~rd_ptr_gray_sync2[4:3], rd_ptr_gray_sync2[2:0]});
+    
+end
+
+assign rd_valid = ~empty;
+assign rd_en = rd_valid & rd_ready;
+
+always @(posedge rd_clk) begin
+
+rd_data <= mem[rd_ptr_bin[3:0]];
+
+end
+
+always @(posedge rd_clk or negedge rd_rst_n) begin
+
+if (!rd_rst_n) rd_ptr_bin <= 5'd0;
+
+else if (rd_en) rd_ptr_bin <= rd_ptr_bin + 5'd1;
+
+end
+
+always @(posedge rd_clk or negedge rd_rst_n) begin
+
+if (!rd_rst_n) rd_ptr_gray <= 5'd0;
+    
+else rd_ptr_gray <= bin_to_gray(rd_ptr_bin);
+    
+end
+
+always @(posedge rd_clk or negedge rd_rst_n) begin
+
+if (!rd_rst_n) begin
+
+wr_ptr_gray_sync1 <= 5'd0;
+wr_ptr_gray_sync2 <= 5'd0;
+    
+end 
+
+else begin
+
+wr_ptr_gray_sync1 <= wr_ptr_gray;
+wr_ptr_gray_sync2 <= wr_ptr_gray_sync1;
+    
+end
+
+end
+
+always @(posedge rd_clk or negedge rd_rst_n) begin
+
+if (!rd_rst_n) empty <= 1'b1;
+
+else empty <= (rd_ptr_gray == wr_ptr_gray_sync2);
+
+end
+
+endmodule
