@@ -89,16 +89,21 @@ module rvsoc (
 	wire [31:0] simpleuart_reg_dat_do;
 	wire        simpleuart_reg_dat_wait;
 
+	wire dataproc_ready;
+	wire [31:0] dataproc_rdata;
+	wire dataproc_valid = iomem_valid && (iomem_addr[31:16] == 16'h0300);
+
 	assign mem_ready =
     (iomem_valid && iomem_ready) ||
     spimem_ready ||
     ram_ready ||
     spimemio_cfgreg_sel ||
     simpleuart_reg_div_sel ||
-    (simpleuart_reg_dat_sel && !simpleuart_reg_dat_wait);
+    (simpleuart_reg_dat_sel && !simpleuart_reg_dat_wait) || dataproc_ready;  
 
 	assign mem_rdata =
-    (iomem_valid && iomem_ready) ? iomem_rdata :
+    (iomem_valid && iomem_ready && !dataproc_valid) ? iomem_rdata :  
+    dataproc_ready              ? dataproc_rdata :  
     spimem_ready                ? spimem_rdata :
     ram_ready                   ? ram_rdata :
     spimemio_cfgreg_sel         ? spimemio_cfgreg_do :
@@ -181,7 +186,18 @@ module rvsoc (
 	);
 
 	// Instantiate your data-processing-producing combined module here
+	data_proc_wrapper data_proc_accel (
+		.clk(clk),
+		.resetn(resetn),
+		.mem_valid(dataproc_valid),
+		.mem_ready(dataproc_ready),
+		.mem_wstrb(iomem_wstrb),
+		.mem_addr(iomem_addr),
+		.mem_wdata(iomem_wdata),
+		.mem_rdata(dataproc_rdata)
+	);
 
+	//----------------------------------------------------------------
 
 	//----------------------------------------------------------------
 
