@@ -53,4 +53,8 @@ I also used an extra bit to account for true full and true empty conditions.
 I used the help of tools to make a comprehensive testbench which check the functioning of all modes if they are working or not.
 For kernel I used the Vertical edge detection kernel.
 
+Simulation Outputs :
+
+(Attached in the repo outside README)
+
 ## PART - C : 
