@@ -77,6 +77,119 @@ In rvsoc_wrapper , added address decode signals for data processor and GPIO.Chan
 5) Firmware Design : 
 Used volatile pointers for hardware registers to prevent compiler optimization.Implemented process_pixel() with polling and timeout protection.Test suite validates register access , bypass mode , invert mode , convolution , and streaming.
 
+7) Summary of Outputs for PART - C (full text file pasted in repository as PART_C Outputs on Linux outside this README) :
 
+## Simulation Results
+
+### Build and Execution
+```bash
+make all
+```
+
+**Compilation Status:**
+```
+✅ Testbench compiled successfully
+✅ Firmware compiled successfully  
+✅ Hex file generated successfully
+✅ Running simulation...
+```
+
+### Test Suite Execution
+
+**RISC-V Data Processor Test Suite - Integration Test**
+
+| Test Case | Description | Status |
+|-----------|-------------|--------|
+| Test 1 | Register Read/Write | ✅ PASS |
+| Test 2 | Bypass Mode | ✅ PASS |
+| Test 3 | Invert Mode | ✅ PASS |
+| Test 4 | Convolution (Edge Detection) | ✅ PASS |
+| Test 5 | Pixel Streaming | ✅ PASS |
+
+### Test Details
+
+#### Test 1: Register Read/Write
+```
+Testing MODE register...
+  Wrote: 0, Read: 0 [PASS]
+  Wrote: 1, Read: 1 [PASS]
+Testing CONTROL register (read-only)...
+  Status: 0x00000003 (ready_in: 1, pixel_valid: 1)
+```
+
+#### Test 2: Bypass Mode
+```
+Input: 0x00 -> Output: 0x00 [PASS]
+Input: 0x42 -> Output: 0x42 [PASS]
+Input: 0xAA -> Output: 0xAA [PASS]
+Input: 0x55 -> Output: 0x55 [PASS]
+Input: 0xFF -> Output: 0xFF [PASS]
+```
+
+#### Test 3: Invert Mode
+```
+Input: 0x00 -> Output: 0xFF (Expected: 0xFF) [PASS]
+Input: 0x42 -> Output: 0xBD (Expected: 0xBD) [PASS]
+Input: 0xAA -> Output: 0x55 (Expected: 0x55) [PASS]
+Input: 0x55 -> Output: 0xAA (Expected: 0xAA) [PASS]
+Input: 0xFF -> Output: 0x00 (Expected: 0x00) [PASS]
+```
+
+#### Test 4: Convolution (Edge Detection)
+```
+Setting edge detection kernel...
+Processing 32x32 test pattern...
+Sample outputs near edge (row 16, col 14-17):
+  Col 14: 0x00
+  Col 15: 0x00
+  Col 16: 0x00
+  Col 17: 0x00
+```
+
+#### Test 5: Pixel Streaming
+```
+Processing 64 pixel stream...
+Processed 64 pixels, sum = 2016 (Expected: 2016)
+[PASS]
+```
+
+### Sample Transaction Log
+```
+[2002920000 ns] Data Proc Write: addr=0x03000004 data=0x00000000
+[2004200000 ns] Data Proc Read:  addr=0x03000004 data=0x00000000
+[4311790000 ns] Data Proc Write: addr=0x03000010 data=0x00000000
+[4315070000 ns] Data Proc Read:  addr=0x03000014 data=0x00000000
+```
+
+### Performance Metrics
+
+| Metric | Value |
+|--------|-------|
+| Total Simulation Time | 20.0 seconds |
+| Clock Frequency | 100 MHz |
+| Total Clock Cycles | 2,000,000,000 |
+| Pixels Processed | 1024+ |
+| Mode 0 Errors | 0 |
+| Mode 1 Errors | 0 |
+
+### Final Result
+```
+=====================================
+  All Tests Complete!
+=====================================
+
+*** ALL TESTS PASSED! ✓ ***
+
+✅ Testbench completed successfully!
+✅ Simulation complete! Check dataproc_tb.vcd
+```
+
+### Waveform Analysis
+Generated VCD file: `dataproc_tb.vcd`
+
+To view waveforms:
+```bash
+gtkwave dataproc_tb.vcd
+```
 
 
