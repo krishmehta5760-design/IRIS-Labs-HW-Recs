@@ -60,7 +60,7 @@ In rvsoc_wrapper , added address decode signals for data processor and GPIO.Chan
 5) Firmware Design : 
 Used volatile pointers for hardware registers to prevent compiler optimization.Implemented process_pixel() with polling and timeout protection.Test suite validates register access , bypass mode , invert mode , convolution , and streaming.
 
-7) Summary of Outputs for PART - C (full text file pasted in repository as PART_C Outputs on Linux outside this README) :
+7) Summary of Outputs for PART - C (full text file pasted in repository as PART_C Outputs on Linux outside this README...used help of tools to create this summary as the full output was very long to put in README) :
 
 ## Simulation Results
 
