@@ -17,6 +17,9 @@ Thank you for showing your interest in joining IRIS Labs
 
 
 All the best!
+## PART - A : 
+
+Already attached as IRIS_LABS_ASSIGN1_PARTA in the repository outside README.
 
 ## PART - B : 
 
@@ -55,6 +58,25 @@ For kernel I used the Vertical edge detection kernel.
 
 Simulation Outputs :
 
-(Attached in the repo outside README)
+(Attached in the repository outside README)
 
 ## PART - C : 
+
+1) Memory Map Design : 
+Allocated data processor to 0x0300_0000 with 64KB space.Moved GPIO to 0x04000000 to avoid conflicts.Register map has 6 registers: status , mode , two kernel coefficient registers , pixel input , and pixel output.
+
+2) Bus Interface Wrapper : 
+Created data_proc_wrapper to bridge SoC memory bus and data processor.Uses 16-bit upper address for peripheral select , lower 16 bits for register select.It implements valid/ready handshake matching PicoRV32 protocol.
+
+3) SoC Integration : 
+Added three wires in rvsoc: dataproc_valid, dataproc_ready, dataproc_rdata.OR'd ready signal into mem_ready arbiter.Prioritized data processor in read mux to prevent response conflicts.
+
+4) Wrapper Module Changes : 
+In rvsoc_wrapper , added address decode signals for data processor and GPIO.Changed GPIO address check from direct comparison to using gpio_sel signal for cleaner logic.
+
+5) Firmware Design : 
+Used volatile pointers for hardware registers to prevent compiler optimization.Implemented process_pixel() with polling and timeout protection.Test suite validates register access , bypass mode , invert mode , convolution , and streaming.
+
+
+
+
